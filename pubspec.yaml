@@ -1,0 +1,42 @@
+name: fit_tracker_app
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.10.3 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  lucide_icons: any
+  fl_chart: ^0.66.0
+  http: ^1.1.0
+  shared_preferences: ^2.2.2
+  image_picker: ^1.0.4
+  pedometer: ^4.0.1
+  permission_handler: ^11.0.1
+  lottie: ^3.1.0
+  flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.4
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_launcher_icons: ^0.13.1
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+    - assets/AppIcon.jpeg
+
+# IMPORTANT: No spaces before flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/AppIcon.jpeg"
+  # This helps prevent the "icon inside a white circle" issue on newer Androids
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/AppIcon.jpeg"
