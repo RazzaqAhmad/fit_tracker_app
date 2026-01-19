@@ -65,8 +65,7 @@ class NotificationService {
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents:
-          DateTimeComponents.time, // This makes it repeat daily
+      matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 

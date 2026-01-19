@@ -1,11 +1,10 @@
 import 'dart:io';
+import 'package:fit_tracker_app/api_service/apiservice.dart';
 import 'package:fit_tracker_app/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import 'dart:async';
-import 'package:http/http.dart' as http;
 import 'setgoal.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -21,7 +20,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _heightController = TextEditingController();
 
-  // --- New Variables for Reminders ---
+  // Reminder Times
   TimeOfDay _waterTime = const TimeOfDay(hour: 08, minute: 00);
   TimeOfDay _workoutTime = const TimeOfDay(hour: 17, minute: 00);
 
@@ -36,16 +35,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     "Stay Fit",
     "Endurance",
   ];
-  final String serverUrl = "http://192.168.1.4:3000";
   Future<Map<String, dynamic>?>? _profileFuture;
 
   @override
   void initState() {
     super.initState();
-    _profileFuture = fetchUserProfile();
+    _profileFuture = ApiService().fetchUserProfile();
   }
 
-  // --- Time Picker Logic ---
+  // --- Notification Logic ---
   Future<void> _selectTime(BuildContext context, String type) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -104,40 +102,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  // (Keeping your existing fetchUserProfile, updateFullProfile, and pickAndUploadImage logic...)
-  Future<Map<String, dynamic>?> fetchUserProfile() async {
-    try {
-      final response = await http
-          .get(Uri.parse('$serverUrl/get-profile'))
-          .timeout(const Duration(seconds: 5));
-      if (response.statusCode == 200) return json.decode(response.body);
-    } catch (e) {
-      debugPrint("Network Error: $e");
-    }
-    return null;
-  }
-
+  // --- API Actions using ApiService ---
   Future<void> _updateFullProfile() async {
-    try {
-      final response = await http.post(
-        Uri.parse('$serverUrl/save-profile'),
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({
-          "fullName": _nameController.text,
-          "age": _ageController.text,
-          "weight": _weightController.text,
-          "height": _heightController.text,
-          "fitnessGoal": _selectedGoal,
-        }),
+    // CORRECTED: Using Named Parameters as defined in your ApiService
+    final result = await ApiService().updateProfileText(
+      name: _nameController.text,
+      age: _ageController.text,
+      weight: _weightController.text,
+      height: _heightController.text,
+      goal: _selectedGoal ?? _goals[0],
+    );
+
+    if (result) {
+      setState(() {
+        _profileFuture = ApiService().fetchUserProfile();
+      });
+      if (mounted) Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Profile Updated Successfully!")),
       );
-      if (response.statusCode == 200) {
-        setState(() {
-          _profileFuture = fetchUserProfile();
-        });
-        if (mounted) Navigator.pop(context);
-      }
-    } catch (e) {
-      debugPrint("Update error: $e");
     }
   }
 
@@ -147,26 +130,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       source: ImageSource.gallery,
       imageQuality: 50,
     );
+
     if (pickedFile != null) {
       setState(() => _isUploading = true);
-      try {
-        var request = http.MultipartRequest(
-          'POST',
-          Uri.parse('$serverUrl/save-profile'),
-        );
-        request.files.add(
-          await http.MultipartFile.fromPath('profileImage', pickedFile.path),
-        );
-        var res = await request.send();
-        if (res.statusCode == 200) {
-          setState(() {
-            _profileFuture = fetchUserProfile();
-            _isUploading = false;
-          });
-        }
-      } catch (e) {
-        setState(() => _isUploading = false);
+
+      final newImage = await ApiService().uploadProfileImage(
+        File(pickedFile.path),
+      );
+
+      if (newImage != null) {
+        setState(() {
+          _profileFuture = ApiService().fetchUserProfile();
+        });
       }
+      setState(() => _isUploading = false);
     }
   }
 
@@ -238,37 +215,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // --- UI HELPERS (Updated SwitchTile to support Tap) ---
-
-  Widget _buildSwitchTile(
-    String t,
-    IconData i,
-    Color c,
-    bool v,
-    Function(bool) onChanged, {
-    VoidCallback? onTap,
-  }) => ListTile(
-    onTap: onTap, // Click the text to change time
-    leading: Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: c.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Icon(i, color: c, size: 20),
-    ),
-    title: Text(t, style: const TextStyle(fontSize: 15)),
-    trailing: Switch.adaptive(
-      value: v,
-      activeColor: const Color(0xFFE52E71),
-      onChanged: onChanged,
-    ),
-  );
-
-  // (... Rest of your UI helper methods: _buildDynamicHeader, _buildErrorState, _showEditSheet, etc.)
-  // Note: Copy your original _buildDynamicHeader, _buildErrorState, _showEditSheet, _buildLogoutButton, _buildSectionTitle, _buildSettingsCard, and _buildNavigationTile here.
-
+  // --- UI Helpers ---
   Widget _buildDynamicHeader(String name, String? profileImage) {
+    // CORRECTED: Accessing static baseUrl via Class name instead of instance
+    final String baseUrl = ApiService.baseUrl;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 60, 20, 40),
@@ -309,19 +260,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           GestureDetector(
             onTap: _pickAndUploadImage,
-            child: CircleAvatar(
-              radius: 25,
-              backgroundColor: Colors.white.withOpacity(0.2),
-              child: profileImage != null
-                  ? ClipOval(
-                      child: Image.network(
-                        '$serverUrl/uploads/$profileImage',
-                        width: 50,
-                        height: 50,
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  : const Icon(Icons.person, color: Colors.white),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.white.withOpacity(0.2),
+                  child: ClipOval(
+                    child: profileImage != null
+                        ? Image.network(
+                            '$baseUrl/uploads/$profileImage',
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                            errorBuilder: (c, e, s) =>
+                                const Icon(Icons.person, color: Colors.white),
+                          )
+                        : const Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: 30,
+                          ),
+                  ),
+                ),
+                if (_isUploading)
+                  const CircularProgressIndicator(color: Colors.white),
+              ],
             ),
           ),
         ],
@@ -329,25 +293,171 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildErrorState() => const Center(child: Text("Connection Lost"));
-
   void _showEditSheet(Map<String, dynamic> data) {
-    /* ... keep your original code ... */
+    _nameController.text = data['fullName'] ?? '';
+    _ageController.text = (data['age'] ?? '').toString();
+    _weightController.text = (data['weight'] ?? '').toString();
+    _heightController.text = (data['height'] ?? '').toString();
+    _selectedGoal = _goals.contains(data['fitnessGoal'])
+        ? data['fitnessGoal']
+        : _goals[0];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 20,
+            right: 20,
+            top: 20,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Edit Profile",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: "Full Name",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _ageController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: "Age",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: _weightController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: "Weight (kg)",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: _heightController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: "Height (cm)",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                DropdownButtonFormField<String>(
+                  value: _selectedGoal,
+                  items: _goals
+                      .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+                      .toList(),
+                  onChanged: (val) => setSheetState(() => _selectedGoal = val),
+                  decoration: const InputDecoration(
+                    labelText: "Fitness Goal",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 25),
+                ElevatedButton(
+                  onPressed: _updateFullProfile,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE52E71),
+                    minimumSize: const Size(double.infinity, 50),
+                  ),
+                  child: const Text(
+                    "Save Changes",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
-  Widget _buildLogoutButton() => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 20),
-    child: ElevatedButton(onPressed: () {}, child: const Text("Log Out")),
+  Widget _buildLogoutButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: ElevatedButton.icon(
+        icon: const Icon(Icons.logout),
+        label: const Text(
+          'Log Out',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red.shade50,
+          foregroundColor: Colors.red,
+          minimumSize: const Size(double.infinity, 55),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+        ),
+        onPressed: () async {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.clear();
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const Setgoal()),
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildErrorState() => Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.wifi_off, size: 50, color: Colors.grey),
+        const Text("Unable to load profile"),
+        TextButton(
+          onPressed: () => setState(() {
+            _profileFuture = ApiService().fetchUserProfile();
+          }),
+          child: const Text("Retry"),
+        ),
+      ],
+    ),
   );
 
   Widget _buildSectionTitle(String title) => Padding(
     padding: const EdgeInsets.fromLTRB(25, 25, 25, 10),
-    child: Text(
-      title,
-      style: const TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.bold,
-        color: Colors.grey,
+    child: Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey,
+        ),
       ),
     ),
   );
@@ -357,8 +467,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(20),
+      boxShadow: [
+        BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+      ],
     ),
     child: Column(children: children),
+  );
+
+  Widget _buildSwitchTile(
+    String t,
+    IconData i,
+    Color c,
+    bool v,
+    Function(bool) onChanged, {
+    VoidCallback? onTap,
+  }) => ListTile(
+    onTap: onTap,
+    leading: Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: c.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(i, color: c, size: 20),
+    ),
+    title: Text(t, style: const TextStyle(fontSize: 15)),
+    trailing: Switch.adaptive(
+      value: v,
+      activeColor: const Color(0xFFE52E71),
+      onChanged: onChanged,
+    ),
   );
 
   Widget _buildNavigationTile(
@@ -367,8 +505,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Color c, {
     required VoidCallback onTap,
   }) => ListTile(
-    leading: Icon(i, color: c),
-    title: Text(t),
+    leading: Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: c.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(i, color: c, size: 20),
+    ),
+    title: Text(t, style: const TextStyle(fontSize: 15)),
+    trailing: const Icon(Icons.chevron_right, size: 20),
     onTap: onTap,
   );
 }

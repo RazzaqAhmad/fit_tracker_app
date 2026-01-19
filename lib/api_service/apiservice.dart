@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
-import 'package:http_parser/http_parser.dart'; // Ensure this is in your pubspec.yaml
+import 'package:http_parser/http_parser.dart';
 
 class ApiService {
-  // Verified Laptop IP and Port
   static const String baseUrl = 'http://192.168.1.4:3000';
 
   static const Map<String, String> _headers = {
@@ -38,12 +37,12 @@ class ApiService {
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 201) {
-        debugPrint("✅ Workout sent successfully!");
+        debugPrint("Workout sent successfully!");
       } else {
-        debugPrint("❌ Server Error: ${response.statusCode} - ${response.body}");
+        debugPrint("Server Error: ${response.statusCode} - ${response.body}");
       }
     } catch (e) {
-      debugPrint("❌ Workout Error: $e");
+      debugPrint("Workout Error: $e");
     }
   }
 
@@ -57,7 +56,7 @@ class ApiService {
       }
       return [];
     } catch (e) {
-      debugPrint("❌ Fetch Workouts Error: $e");
+      debugPrint("Fetch Workouts Error: $e");
       return [];
     }
   }
@@ -73,7 +72,7 @@ class ApiService {
         return json.decode(response.body);
       }
     } catch (e) {
-      debugPrint("❌ Fetch Profile Error: $e");
+      debugPrint("Fetch Profile Error: $e");
     }
     return null;
   }
@@ -103,11 +102,11 @@ class ApiService {
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("✅ Profile updated!");
+        debugPrint("Profile updated!");
         return true;
       }
     } catch (e) {
-      debugPrint("❌ Profile Update Error: $e");
+      debugPrint("Profile Update Error: $e");
     }
     return false;
   }
@@ -137,11 +136,11 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        debugPrint("✅ Image uploaded: ${data['profileImage']}");
+        debugPrint("Image uploaded: ${data['profileImage']}");
         return data['profileImage']; // Return the new filename
       }
     } catch (e) {
-      debugPrint("❌ Image Upload Error: $e");
+      debugPrint("Image Upload Error: $e");
     }
     return null;
   } // --- THE METHOD THAT WAS MISSING ---
@@ -186,7 +185,7 @@ class ApiService {
         return true;
       }
     } catch (e) {
-      debugPrint("❌ ApiService Error: $e");
+      debugPrint("ApiService Error: $e");
     }
     return false;
   }

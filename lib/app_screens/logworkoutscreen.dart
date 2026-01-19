@@ -29,7 +29,6 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
     super.dispose();
   }
 
-  // 2. Logic: Sends 'exercise' to match your Backend Schema
   void _saveWorkout() async {
     final String exerciseName = _nameController.text.trim();
     final int sets = int.tryParse(_setsController.text) ?? 0;
@@ -47,19 +46,17 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // NOTE: We pass exerciseName which the ApiService sends as "exercise" to Node.js
       await _apiService.sendWorkout(exerciseName, sets, reps, weight, duration);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Workout Saved Successfully!'),
+            content: Text('Workout Saved Successfully!'),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
           ),
         );
 
-        // Clear fields after success
         _nameController.clear();
         _setsController.clear();
         _repsController.clear();
@@ -69,7 +66,7 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Error: Could not reach server.')),
+          const SnackBar(content: Text('Error: Could not reach server.')),
         );
       }
     } finally {
@@ -83,7 +80,6 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
       backgroundColor: const Color(0xFFF8F9FA),
       body: Column(
         children: [
-          // 1. Header with Gradient
           Container(
             padding: const EdgeInsets.only(top: 50, bottom: 20),
             width: double.infinity,
@@ -109,12 +105,11 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 48), // Balancing the back button
+                const SizedBox(width: 48),
               ],
             ),
           ),
 
-          // 2. Input Form
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -158,7 +153,6 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
                   ),
                   const SizedBox(height: 25),
 
-                  // Recent Exercises Section
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -199,7 +193,6 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
                   ),
                   const SizedBox(height: 30),
 
-                  // Save Workout Button
                   SizedBox(
                     width: double.infinity,
                     height: 55,

@@ -18,7 +18,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // 1. Purple Header
             Container(
               padding: const EdgeInsets.fromLTRB(20, 60, 20, 30),
               decoration: const BoxDecoration(
@@ -77,7 +76,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
               ),
             ),
 
-            // 2. Weight Progress Chart Card
             _buildChartCard(
               title: "Weight Progress",
               subtitle: Row(
@@ -93,13 +91,11 @@ class _ProgressScreenState extends State<ProgressScreen> {
               chart: SizedBox(height: 200, child: LineChart(_weightData())),
             ),
 
-            // 3. Calories Burned Bar Chart Card
             _buildChartCard(
               title: "Calories Burned",
               chart: SizedBox(height: 200, child: BarChart(_caloriesData())),
             ),
 
-            // 4. Achievement Summary Row
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -144,7 +140,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
     );
   }
 
-  // (Keeping your buildChartCard and buildSummaryBox helpers as they are...)
   Widget _buildChartCard({
     required String title,
     Widget? subtitle,
@@ -235,8 +230,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
       ),
     );
   }
-
-  // --- Updated Chart Data Logic ---
 
   LineChartData _weightData() {
     List<FlSpot> spots;
@@ -380,9 +373,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
         BarChartRodData(
           toY: y,
           color: Colors.orange.withOpacity(0.8),
-          width: selectedTimeFrame == 'Week'
-              ? 15
-              : 30, // Adjust width based on timeframe
+          width: selectedTimeFrame == 'Week' ? 15 : 30,
           borderRadius: BorderRadius.circular(4),
         ),
       ],

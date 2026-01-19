@@ -16,7 +16,6 @@ class MyApp extends StatelessWidget {
   final bool isGoalSet;
   const MyApp({super.key, this.isGoalSet = false});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

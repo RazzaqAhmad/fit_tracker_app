@@ -22,10 +22,9 @@ app.use('/uploads', express.static(uploadDir));
 
 // --- 1. MONGODB CONNECTION ---
 mongoose.connect('mongodb://127.0.0.1:27017/fit_tracker')
-    .then(() => console.log("✅ Successfully connected to MongoDB!"))
-    .catch(err => console.error("❌ MongoDB connection error:", err));
+    .then(() => console.log("Successfully connected to MongoDB!"))
+    .catch(err => console.error("MongoDB connection error:", err));
 
-// --- 2. MULTER CONFIGURATION (For Images) ---
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'uploads/');
@@ -38,7 +37,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// --- 3. SCHEMAS & MODELS ---
 const profileSchema = new mongoose.Schema({
     fullName: String,
     age: Number,
@@ -53,7 +51,6 @@ const Profile = mongoose.model('Profile', profileSchema);
 
 // --- 4. ROUTES ---
 
-// Get the latest profile
 app.get('/get-profile', async (req, res) => {
     try {
         const profile = await Profile.findOne().sort({ updatedAt: -1 });
@@ -66,7 +63,6 @@ app.get('/get-profile', async (req, res) => {
 
 app.post('/save-profile', upload.single('profileImage'), async (req, res) => {
     try {
-        // req.body contains text fields whether it's JSON or Multipart
         const { fullName, age, weight, height, fitnessGoal } = req.body;
 
         let updateData = {
@@ -78,20 +74,19 @@ app.post('/save-profile', upload.single('profileImage'), async (req, res) => {
             updatedAt: Date.now()
         };
 
-        // Only update image if a new file is sent
         if (req.file) { 
             updateData.profileImage = req.file.filename;
         }
 
         const profile = await Profile.findOneAndUpdate({}, updateData, {
             new: true,
-            upsert: true // Creates if missing, updates if exists
+            upsert: true 
         });
 
-        console.log("✅ Profile Updated in DB");
+        console.log("Profile Updated in DB");
         res.status(200).json({ message: "Success", profile });
     } catch (err) {
-        console.error("❌ Save Error:", err);
+        console.error("Save Error:", err);
         res.status(400).json({ error: "Failed to save profile" });
     }
 });
@@ -105,7 +100,6 @@ const workoutSchema = new mongoose.Schema({
 });
 
 const Workout = mongoose.model('Workout', workoutSchema);
-// POST Workout data
 app.post('/add-workout', async (req, res) => {
     try {
         const { exercise, sets, reps, weight, duration } = req.body;
@@ -120,25 +114,23 @@ app.post('/add-workout', async (req, res) => {
 
         await newWorkout.save();
         
-        console.log("✅ Workout saved to DB:", exercise);
+        console.log("Workout saved to DB:", exercise);
         res.status(201).json({ message: "Workout added successfully!", workout: newWorkout });
     } catch (err) {
-        console.error("❌ Workout Save Error:", err);
+        console.error("Workout Save Error:", err);
         res.status(400).json({ error: "Failed to save workout" });
     }
 });
-// GET all workouts
 app.get('/workouts', async (req, res) => {
     try {
-        // Fetch workouts sorted by newest first
         const workouts = await Workout.find().sort({ createdAt: -1 });
         res.json(workouts);
     } catch (err) {
-        console.error("❌ Error fetching workouts:", err);
+        console.error("Error fetching workouts:", err);
         res.status(500).json({ error: "Failed to fetch workouts" });
     }
 });
-// --- 5. START SERVER ---
+
 const PORT = 3000;
 app.listen(PORT, '0.0.0.0', () => {
     const networkInterfaces = os.networkInterfaces();
@@ -151,8 +143,8 @@ app.listen(PORT, '0.0.0.0', () => {
         }
     }
 
-    console.log(`\n🚀 Fit Tracker Server is Online!`);
-    console.log(`🔗 Local: http://localhost:${PORT}`);
-    console.log(`📱 Flutter BaseUrl: http://${localIp}:${PORT}`);
-    console.log(`📁 Images: http://${localIp}:${PORT}/uploads/filename.jpg\n`);
+    console.log(`Fit Tracker Server is Online!`);
+    console.log(`Local: http://localhost:${PORT}`);
+    console.log(`Flutter BaseUrl: http://${localIp}:${PORT}`);
+    console.log(`Images: http://${localIp}:${PORT}/uploads/filename.jpg\n`);
 });

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../controllers/app_state.dart'; // Ensure this path matches your project
+import '../controllers/app_state.dart';
 
 class NutritionScreen extends StatefulWidget {
   const NutritionScreen({super.key});
@@ -12,7 +12,6 @@ class _NutritionScreenState extends State<NutritionScreen> {
   @override
   void initState() {
     super.initState();
-    // Listen for changes in the global state
     appState.addListener(_updateUI);
   }
 
@@ -26,7 +25,6 @@ class _NutritionScreenState extends State<NutritionScreen> {
     if (mounted) setState(() {});
   }
 
-  // Function to show the "Add Meal" Dialog
   void _showAddMealDialog() {
     String mealTitle = "Snack";
     int mealCals = 200;
@@ -75,7 +73,6 @@ class _NutritionScreenState extends State<NutritionScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // 1. Header with Global State Data
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 60, 20, 40),
@@ -95,10 +92,6 @@ class _NutritionScreenState extends State<NutritionScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // IconButton(
-                      //   icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      //   onPressed: () => Navigator.pop(context),
-                      // ),
                       const SizedBox(width: 80),
                       const Text(
                         'Nutrition',
@@ -178,7 +171,6 @@ class _NutritionScreenState extends State<NutritionScreen> {
               ),
             ),
 
-            // 2. Macro-nutrient Cards (Linked to appState)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               child: Row(
@@ -207,7 +199,6 @@ class _NutritionScreenState extends State<NutritionScreen> {
               ),
             ),
 
-            // 3. Today's Meals Section (Dynamic List)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
@@ -232,7 +223,6 @@ class _NutritionScreenState extends State<NutritionScreen> {
                       ),
                     ],
                   ),
-                  // This builds a card for every meal in appState.meals
                   ...appState.meals.map(
                     (meal) => Padding(
                       padding: const EdgeInsets.only(bottom: 12.0),
@@ -249,11 +239,10 @@ class _NutritionScreenState extends State<NutritionScreen> {
               ),
             ),
 
-            // 4. Interactive Water Intake Banner
             Padding(
               padding: const EdgeInsets.all(20),
               child: InkWell(
-                onTap: () => appState.addWater(0.25), // Adds 250ml per click
+                onTap: () => appState.addWater(0.25),
                 borderRadius: BorderRadius.circular(20),
                 child: Container(
                   padding: const EdgeInsets.all(20),

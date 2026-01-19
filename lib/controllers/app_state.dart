@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 
 class AppState extends ChangeNotifier {
-  // User Data
   String name = "User";
   String? profileImage;
 
-  // Nutrition Data
   int calorieGoal = 2200;
   int caloriesConsumed = 1250;
   double waterGoal = 3.0;
   double waterConsumed = 2.1;
 
-  // Macros
   int carbs = 142;
   int protein = 98;
   int fats = 52;
@@ -36,7 +33,7 @@ class AppState extends ChangeNotifier {
 
   void updateName(String newName) {
     name = newName;
-    notifyListeners(); // This automatically triggers your _refreshUI in HomeScreen
+    notifyListeners();
   }
 
   void addMeal(String title, int calories, List<String> items) {

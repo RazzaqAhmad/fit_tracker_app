@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dashboardscreen.dart';
 
 class Setgoal extends StatefulWidget {
-  final Map<String, dynamic>? existingData; // Add this for editing mode
+  final Map<String, dynamic>? existingData;
 
   const Setgoal({super.key, this.existingData});
 
@@ -27,7 +27,6 @@ class _SetgoalState extends State<Setgoal> {
   @override
   void initState() {
     super.initState();
-    // If we passed existing data (Edit Mode), pre-fill the controllers
     if (widget.existingData != null) {
       _nameController.text = widget.existingData!['fullName'] ?? '';
       _ageController.text = (widget.existingData!['age'] ?? '').toString();
@@ -43,7 +42,7 @@ class _SetgoalState extends State<Setgoal> {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 70, // Slightly lower quality for faster upload
+      imageQuality: 70,
     );
 
     if (pickedFile != null) {
@@ -52,7 +51,6 @@ class _SetgoalState extends State<Setgoal> {
   }
 
   Future<void> _handleSave() async {
-    // Basic Validation
     if (_nameController.text.trim().isEmpty) {
       _showSnackBar("Please enter your name");
       return;
@@ -61,7 +59,6 @@ class _SetgoalState extends State<Setgoal> {
     setState(() => _isLoading = true);
 
     try {
-      // One single call to update/save everything including the image
       bool success = await ApiService().saveProfileWithImage(
         name: _nameController.text,
         age: _ageController.text,
@@ -77,10 +74,8 @@ class _SetgoalState extends State<Setgoal> {
 
         if (!mounted) return;
 
-        // Success Feedback
         _showSnackBar("Profile saved successfully!", isError: false);
 
-        // Redirect to Dashboard
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const DashboardScreen()),
