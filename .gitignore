@@ -56,5 +56,8 @@ backend/.env
 .DS_Store
 backend/uploads/
 *.jpg
-*.png
 *.jpeg
+*.png
+*.gif
+*.svg
+*.webp
