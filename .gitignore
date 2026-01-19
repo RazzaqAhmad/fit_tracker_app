@@ -54,3 +54,7 @@ backend/.env
 
 # MacOS files
 .DS_Store
+backend/uploads/
+*.jpg
+*.png
+*.jpeg
