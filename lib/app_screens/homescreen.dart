@@ -16,7 +16,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String _steps = '0';
   String _burnedCalories = '0';
 
-  // New variables for dynamic data and expansion
   List<dynamic> _recentWorkouts = [];
   int? _expandedIndex;
   bool _isLoadingWorkouts = false;
@@ -27,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
     initPlatformState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchUserProfile();
-      _fetchWorkouts(); // Fetch real workout data on load
+      _fetchWorkouts();
     });
     appState.addListener(_refreshUI);
   }
@@ -49,11 +48,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Fetch real workouts from your API
   Future<void> _fetchWorkouts() async {
     setState(() => _isLoadingWorkouts = true);
     try {
-      // Ensure your ApiService has a fetchRecentWorkouts or similar method
       final data = await ApiService().fetchWorkouts();
       if (data != null) {
         setState(() {

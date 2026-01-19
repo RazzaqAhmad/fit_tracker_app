@@ -9,11 +9,9 @@ class NotificationService {
   static Future<void> init() async {
     tz.initializeTimeZones();
 
-    // Android Settings
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    // iOS Settings
     const DarwinInitializationSettings iosSettings =
         DarwinInitializationSettings(
           requestAlertPermission: true,
@@ -29,7 +27,6 @@ class NotificationService {
     await _notificationsPlugin.initialize(settings);
   }
 
-  // Instant Notification
   static Future<void> showInstantNotification(String title, String body) async {
     const NotificationDetails details = NotificationDetails(
       android: AndroidNotificationDetails(
@@ -43,7 +40,56 @@ class NotificationService {
     await _notificationsPlugin.show(0, title, body, details);
   }
 
-  // Cancel all notifications
+  // --- NEW: Scheduled Daily Notification ---
+  static Future<void> showScheduledNotification({
+    required int id,
+    required String title,
+    required String body,
+    required int hour,
+    required int minute,
+  }) async {
+    await _notificationsPlugin.zonedSchedule(
+      id,
+      title,
+      body,
+      _nextInstanceOfTime(hour, minute),
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'scheduled_channel',
+          'Scheduled Reminders',
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents:
+          DateTimeComponents.time, // This makes it repeat daily
+    );
+  }
+
+  static tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
+    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+    tz.TZDateTime scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+    return scheduledDate;
+  }
+
+  static Future<void> cancelNotification(int id) async {
+    await _notificationsPlugin.cancel(id);
+  }
+
   static Future<void> cancelAll() async {
     await _notificationsPlugin.cancelAll();
   }
